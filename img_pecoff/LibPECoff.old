@@ -1,0 +1,160 @@
+﻿// libpecoff.cpp : 定义静态库的函数。
+//
+
+#define INDEX_OFFSET	0
+
+#define ADD_INTRIN_FIELD(compound, field, base, raw)									\
+	object = BoxIntrinsic::New(raw->field);												\
+	object->SetInternal(INDEX_OFFSET, (BYTE*)(&raw->field) - (BYTE*)(base));				\
+	compound->AddField(#field, object);
+
+#define ADD_ARYBUF_FIELD(compound, field, base, raw, size)								\
+	object = BoxArray::New();															\
+	for(unsigned idx = 0; idx < size; idx++){											\
+		BoxIntrinsic* element = BoxIntrinsic::New(raw->field[idx]);						\
+		element->SetInternal(INDEX_OFFSET, (BYTE*)(raw->field + idx) - (BYTE*)(base));	\
+		object->Cast<BoxArray>()->Push(element);											\
+	}																					\
+	compound->AddField(#field, object);
+
+#define BDH(F)
+#define BDHAB(F, S)
+#define BSH(F)
+#define BFH(F)
+
+#include "LibPECoff.h"
+#include "OsDep.h"
+#include "Box.h"
+#include <vector>
+#include <map>
+
+namespace pecoff {
+	using namespace std;
+	using namespace box;
+
+	class PECoffAnalysis {
+	public:
+		virtual IMAGE_DOS_HEADER* GetDosHeader() {
+			return dos_header_;
+		}
+		virtual BoxData* GetDosHeaderBoxed() {
+			return nullptr;
+		}
+
+		virtual IMAGE_FILE_HEADER* GetFileHeader() {
+			return file_header_;
+		}
+		//virtual BoxData* GetFileHeaderBoxed() {
+
+		//	return boxed;
+		//}
+
+		virtual IMAGE_SECTION_HEADER* GetSectionHeaderList() {
+			return section_header_;
+		}
+		virtual BoxData* GetSectionArrayBoxed() {
+			BoxArray* section_array = BoxArray::New();
+			for (unsigned i = 0;i < file_header_->NumberOfSections;i++) {
+				PIMAGE_SECTION_HEADER cur_section = section_header_ + i;
+				BoxData* object;
+				BoxCompound* section = BoxCompound::New();
+				ADD_ARYBUF_FIELD(section, Name, osdep_.GetMapBase(), cur_section, IMAGE_SIZEOF_SHORT_NAME);
+#define BSH(field)	ADD_INTRIN_FIELD(section, field, osdep_.GetMapBase(), cur_section)
+#include "PESpec.def"
+#define BSH(field)
+				section->SetInternal(INDEX_OFFSET, (BYTE*)cur_section - (BYTE*)osdep_.GetMapBase());
+				section_array->Push(section);
+			}
+			return section_array;
+		}
+
+		// virtual BoxData* GetOptionalHeaderBoxed();
+
+	protected:
+		OsDependance osdep_;
+
+	protected:
+		virtual void HandleOptionalHeader() = 0;
+
+	private:
+		void GenDosHeader() {
+			BoxData* object;
+			BoxCompound* boxed = BoxCompound::New();
+#define BDH(field)			ADD_INTRIN_FIELD(boxed, field, osdep_.GetMapBase(), dos_header_)
+#define BDHAB(field, size)	ADD_ARYBUF_FIELD(boxed, field, osdep_.GetMapBase(), dos_header_, size)
+#include "PESpec.def"
+#define BDHAB(field, size)
+#define BDH(field)
+			pe_root_->SetProperty("dos_header", boxed);
+		}
+
+		void GenFileHeader() {
+			BoxData* object;
+			BoxCompound* boxed = BoxCompound::New();
+#define BFH(field)			ADD_INTRIN_FIELD(boxed, field, osdep_.GetMapBase(), file_header_)
+#include "PESpec.def"
+#define BFH(field)
+			pe_root_->SetProperty("file_header", boxed);
+		}
+
+		void GenSectionTable() {
+			BoxArray* section_array = BoxArray::New();
+			for (unsigned i = 0;i < file_header_->NumberOfSections;i++) {
+				PIMAGE_SECTION_HEADER cur_section = section_header_ + i;
+				BoxData* object;
+				BoxCompound* section = BoxCompound::New();
+				ADD_ARYBUF_FIELD(section, Name, osdep_.GetMapBase(), cur_section, IMAGE_SIZEOF_SHORT_NAME);
+#define BSH(field)	ADD_INTRIN_FIELD(section, field, osdep_.GetMapBase(), cur_section)
+#include "PESpec.def"
+#define BSH(field)
+				section->SetInternal(INDEX_OFFSET, (BYTE*)cur_section - (BYTE*)osdep_.GetMapBase());
+				section_array->Push(section);
+			}
+			pe_root_->SetProperty("section_list", section_array);
+		}
+
+		void GenImportTable() {
+			PIMAGE_IMPORT_DESCRIPTOR import_entry = import_desc_;
+			BoxArray* import_table = BoxArray::New();
+			while (import_entry->Name != 0) {
+
+				import_entry++;
+			}
+		}
+
+		virtual void GenOptionalHeader() = 0;
+
+		void GenerateAnalysis() {
+			void* base = osdep_.GetMapBase();
+			
+			dos_header_ = reinterpret_cast<PIMAGE_DOS_HEADER>(base);
+			GenDosHeader();
+			file_header_ = reinterpret_cast<PIMAGE_FILE_HEADER>((BYTE*)base + dos_header_->e_lfanew);
+			GenFileHeader();
+			HandleOptionalHeader();
+			
+
+		}
+
+	private:
+		PULONG pe_magic_;
+		PIMAGE_DOS_HEADER dos_header_;
+		PIMAGE_FILE_HEADER file_header_;
+		PIMAGE_SECTION_HEADER section_header_;
+		PIMAGE_IMPORT_DESCRIPTOR import_desc_;
+		PIMAGE_EXPORT_DIRECTORY export_dir_;
+		DWORD size_of_headers_;
+
+		BoxObject* pe_root_;
+
+	};
+
+	class PECoffAnalysisX86 :public PECoffAnalysis {
+
+	};
+
+	class PECoffAnalysisAmd64 :public PECoffAnalysis {
+
+	};
+
+}

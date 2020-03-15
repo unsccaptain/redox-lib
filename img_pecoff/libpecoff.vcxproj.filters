@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="os_dep">
+      <UniqueIdentifier>{2aafb241-d1aa-4ea2-9d2d-c572338210de}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Box.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="os_dep.h">
+      <Filter>os_dep</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_coff.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_import.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_export.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Box.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="OsDependance\os_dep_win.cpp">
+      <Filter>os_dep</Filter>
+    </ClCompile>
+    <ClCompile Include="pe_coff.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pe_import.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pe_export.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
