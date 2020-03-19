@@ -4,19 +4,21 @@
 
 namespace redox {
 
-	class NapiOriginal :public NapiBase {
+	class NapiNative :public NapiBase {
 	public:
-		NapiOriginal(napi_env env, uint8_t value);
+		NapiNative(napi_env env, uint8_t value);
 
-		NapiOriginal(napi_env env, uint16_t value);
+		NapiNative(napi_env env, uint16_t value);
 
-		NapiOriginal(napi_env env, uint32_t value);
+		NapiNative(napi_env env, uint32_t value);
 
-		NapiOriginal(napi_env env, unsigned long value);
+		NapiNative(napi_env env, unsigned long value);
 
-		NapiOriginal(napi_env env, int32_t value);
+		NapiNative(napi_env env, uint64_t value);
 
-		NapiOriginal(napi_env env, long value);
+		NapiNative(napi_env env, int32_t value);
+
+		NapiNative(napi_env env, long value);
 	};
 
 	class NapiNamedField :public NapiBase {
@@ -28,6 +30,8 @@ namespace redox {
 		NapiNamedField(napi_env env, const char* name, uint32_t v, void* ptr);
 
 		NapiNamedField(napi_env env, const char* name, unsigned long v, void* ptr);
+
+		NapiNamedField(napi_env env, const char* name, uint64_t v, void* ptr);
 
 		NapiNamedField(napi_env env, const char* name, int32_t v, void* ptr);
 

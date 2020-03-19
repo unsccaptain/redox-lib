@@ -110,6 +110,7 @@
       </PrecompiledHeaderFile>
       <DisableSpecificWarnings>4005</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>./;../include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

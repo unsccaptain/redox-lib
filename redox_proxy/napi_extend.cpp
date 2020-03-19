@@ -10,21 +10,28 @@ namespace redox {
 		return nullptr;
 	}
 
-	static napi_value OriginalToStringCallback(napi_env env, napi_callback_info info) {
-		ExtractCallbackInfo cbi = ExtractCallbackInfo(env, info, 1);
-		int radix = 16;
-		if (cbi.GetArgCount() == 1) {
-			CheckNAPI(napi_get_value_int32(env, cbi.GetArgIdx(0), &radix));
-		}
-
-		NapiObject object = NapiObject(env, cbi.GetHolder());
-		int64_t field_value = NapiPrimitive(env, object["value"]).GetPrimitive();
-		int32_t byte_size = NapiPrimitive(env, object["byte_size"]).GetPrimitive();
-		field_value = field_value & ((1LL << (byte_size * 8)) - 1);
+	static string NativeValueFormattedOutput(napi_env env, napi_value native, uint32_t radix) {
+		NapiObject object = NapiObject(env, native);
+		int64_t field_value;
+		uint64_t field_value_u;
 		stringstream stream;
 		string output;
-
 		stream.fill('0');
+
+		int32_t byte_size = NapiPrimitive(env, object["byte_size"]).GetPrimitive();
+		if (byte_size != 8) {
+			field_value = NapiPrimitive(env, object["value"]).GetPrimitive();
+			field_value = field_value & ((1LL << (byte_size * 8)) - 1);
+		}
+		else {
+			field_value_u = NapiPrimitive(env, object["value_high"]).GetPrimitive();
+			field_value_u = ((uint64_t)field_value_u << 32) | NapiPrimitive(env, object["value_low"]).GetPrimitive();
+			stream.width(byte_size * 2);
+			stream << std::hex << std::uppercase << field_value_u;
+			stream >> output;
+			return output;
+		}
+
 		switch (radix) {
 		case 8:
 			stream << std::oct << field_value;
@@ -41,65 +48,102 @@ namespace redox {
 		}
 		stream >> output;
 
-		return NapiString(env, output).GetValue();
+		return output;
 	}
 
-	NapiOriginal::NapiOriginal(napi_env env, uint8_t value)
+	static napi_value OriginalToStringCallback(napi_env env, napi_callback_info info) {
+		ExtractCallbackInfo cbi = ExtractCallbackInfo(env, info, 1);
+		int radix = 16;
+		if (cbi.GetArgCount() == 1) {
+			CheckNAPI(napi_get_value_int32(env, cbi.GetArgIdx(0), &radix));
+		}
+		return NapiString(env,
+			NativeValueFormattedOutput(env, cbi.GetHolder(), radix)).GetValue();
+	}
+
+	NapiNative::NapiNative(napi_env env, uint8_t value)
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "value", NapiPrimitive(env, value).GetValue()));
 		CheckNAPI(napi_set_named_property(
 			env, value_, "byte_size", NapiPrimitive(env, 1).GetValue()));
 		CheckNAPI(napi_set_named_property(
+			env, value_, "signed", NapiPrimitive(env, false).GetValue()));
+		CheckNAPI(napi_set_named_property(
 			env, value_, "toString", NapiFunction(env, OriginalToStringCallback).GetValue()));
 	}
 
-	NapiOriginal::NapiOriginal(napi_env env, uint16_t value)
+	NapiNative::NapiNative(napi_env env, uint16_t value)
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "value", NapiPrimitive(env, value).GetValue()));
 		CheckNAPI(napi_set_named_property(
 			env, value_, "byte_size", NapiPrimitive(env, 2).GetValue()));
 		CheckNAPI(napi_set_named_property(
+			env, value_, "signed", NapiPrimitive(env, false).GetValue()));
+		CheckNAPI(napi_set_named_property(
 			env, value_, "toString", NapiFunction(env, OriginalToStringCallback).GetValue()));
 	}
 
-	NapiOriginal::NapiOriginal(napi_env env, uint32_t value)
+	NapiNative::NapiNative(napi_env env, uint32_t value)
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "value", NapiPrimitive(env, (int64_t)value).GetValue()));
 		CheckNAPI(napi_set_named_property(
 			env, value_, "byte_size", NapiPrimitive(env, 4).GetValue()));
 		CheckNAPI(napi_set_named_property(
+			env, value_, "signed", NapiPrimitive(env, false).GetValue()));
+		CheckNAPI(napi_set_named_property(
 			env, value_, "toString", NapiFunction(env, OriginalToStringCallback).GetValue()));
 	}
 
-	NapiOriginal::NapiOriginal(napi_env env, unsigned long value)
+	NapiNative::NapiNative(napi_env env, unsigned long value)
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "value", NapiPrimitive(env, (int64_t)value).GetValue()));
 		CheckNAPI(napi_set_named_property(
 			env, value_, "byte_size", NapiPrimitive(env, 4).GetValue()));
 		CheckNAPI(napi_set_named_property(
+			env, value_, "signed", NapiPrimitive(env, false).GetValue()));
+		CheckNAPI(napi_set_named_property(
 			env, value_, "toString", NapiFunction(env, OriginalToStringCallback).GetValue()));
 	}
 
-	NapiOriginal::NapiOriginal(napi_env env, int32_t value)
+	NapiNative::NapiNative(napi_env env, uint64_t value)
+		:NapiBase(env) {
+		CheckNAPI(napi_create_object(env, &value_));
+		CheckNAPI(napi_set_named_property(env, value_, "value_high",
+			NapiPrimitive(env, (uint32_t)(value >> 32)).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "value_low",
+			NapiPrimitive(env, (uint32_t)(value & 0xFFFFFFFF)).GetValue()));
+		CheckNAPI(napi_set_named_property(
+			env, value_, "byte_size", NapiPrimitive(env, 8).GetValue()));
+		CheckNAPI(napi_set_named_property(
+			env, value_, "signed", NapiPrimitive(env, false).GetValue()));
+		CheckNAPI(napi_set_named_property(
+			env, value_, "toString", NapiFunction(env, OriginalToStringCallback).GetValue()));
+	}
+
+	NapiNative::NapiNative(napi_env env, int32_t value)
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "value", NapiPrimitive(env, value).GetValue()));
 		CheckNAPI(napi_set_named_property(
 			env, value_, "byte_size", NapiPrimitive(env, 4).GetValue()));
 		CheckNAPI(napi_set_named_property(
+			env, value_, "signed", NapiPrimitive(env, true).GetValue()));
+		CheckNAPI(napi_set_named_property(
 			env, value_, "toString", NapiFunction(env, OriginalToStringCallback).GetValue()));
 	}
 
-	NapiOriginal::NapiOriginal(napi_env env, long value)
+	NapiNative::NapiNative(napi_env env, long value)
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "value", NapiPrimitive(env, value).GetValue()));
 		CheckNAPI(napi_set_named_property(
 			env, value_, "byte_size", NapiPrimitive(env, 4).GetValue()));
+		CheckNAPI(napi_set_named_property(
+			env, value_, "signed", NapiPrimitive(env, true).GetValue()));
 		CheckNAPI(napi_set_named_property(
 			env, value_, "toString", NapiFunction(env, OriginalToStringCallback).GetValue()));
 	}
@@ -114,7 +158,7 @@ namespace redox {
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "field_name", redox::NapiString(env, name).GetValue()));
-		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiOriginal(env, v).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiNative(env, v).GetValue()));
 		CheckNAPI(napi_set_named_property(env, value_, "rewrite",
 			redox::NapiFunction(env, TrivalRewriteCallback, ptr).GetValue()));
 	}
@@ -123,7 +167,7 @@ namespace redox {
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "field_name", redox::NapiString(env, name).GetValue()));
-		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiOriginal(env, v).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiNative(env, v).GetValue()));
 		CheckNAPI(napi_set_named_property(env, value_, "rewrite",
 			redox::NapiFunction(env, TrivalRewriteCallback, ptr).GetValue()));
 	}
@@ -132,7 +176,7 @@ namespace redox {
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "field_name", redox::NapiString(env, name).GetValue()));
-		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiOriginal(env, v).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiNative(env, v).GetValue()));
 		CheckNAPI(napi_set_named_property(env, value_, "rewrite",
 			redox::NapiFunction(env, TrivalRewriteCallback, ptr).GetValue()));
 	}
@@ -141,7 +185,16 @@ namespace redox {
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "field_name", redox::NapiString(env, name).GetValue()));
-		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiOriginal(env, v).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiNative(env, v).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "rewrite",
+			redox::NapiFunction(env, TrivalRewriteCallback, ptr).GetValue()));
+	}
+
+	NapiNamedField::NapiNamedField(napi_env env, const char* name, uint64_t v, void* ptr)
+		:NapiBase(env) {
+		CheckNAPI(napi_create_object(env, &value_));
+		CheckNAPI(napi_set_named_property(env, value_, "field_name", redox::NapiString(env, name).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiNative(env, v).GetValue()));
 		CheckNAPI(napi_set_named_property(env, value_, "rewrite",
 			redox::NapiFunction(env, TrivalRewriteCallback, ptr).GetValue()));
 	}
@@ -150,7 +203,7 @@ namespace redox {
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "field_name", redox::NapiString(env, name).GetValue()));
-		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiOriginal(env, v).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiNative(env, v).GetValue()));
 		CheckNAPI(napi_set_named_property(env, value_, "rewrite",
 			redox::NapiFunction(env, TrivalRewriteCallback, ptr).GetValue()));
 	}
@@ -159,7 +212,7 @@ namespace redox {
 		:NapiBase(env) {
 		CheckNAPI(napi_create_object(env, &value_));
 		CheckNAPI(napi_set_named_property(env, value_, "field_name", redox::NapiString(env, name).GetValue()));
-		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiOriginal(env, v).GetValue()));
+		CheckNAPI(napi_set_named_property(env, value_, "field_value", redox::NapiNative(env, v).GetValue()));
 		CheckNAPI(napi_set_named_property(env, value_, "rewrite",
 			redox::NapiFunction(env, TrivalRewriteCallback, ptr).GetValue()));
 	}

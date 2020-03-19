@@ -7,9 +7,7 @@
 #define NAPI_VERSION 5
 #include <node_api.h>
 #include <assert.h>
-
-#define CheckNAPI(status)       if((status)!=napi_ok) assert(false);
-#define CheckPTR(ptr)           if((ptr)!=nullptr) assert(false);
+#include <check.h>
 
 #define NAPI_CALL(env, call, ret)                                   \
   do {                                                              \

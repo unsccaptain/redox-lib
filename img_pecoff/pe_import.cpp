@@ -1,4 +1,4 @@
-
+  
 #include "pe_coff.h"
 #include "pe_import.h"
 
@@ -20,7 +20,7 @@ namespace pecoff {
 	}
 
 	PIMAGE_IMPORT_BY_NAME PECoffImportThunk::GetNameDescriptor() {
-		assert(IsOrdinal());
+		assert(kind_ == ThunkKind::NameDescriptor);
 		PIMAGE_IMPORT_BY_NAME import_by_name;
 		if (analysis_->IsX64())
 			import_by_name = force_cast<PIMAGE_IMPORT_BY_NAME>(
@@ -31,7 +31,7 @@ namespace pecoff {
 		return import_by_name;
 	}
 
-	uint64_t PECoffImportThunk::GetOrdinal() {
+	uint64_t PECoffImportThunk::GetOrdinal() const {
 		assert(kind_ == ThunkKind::Ordinal);
 		// pecoff_v83: A 16-bit ordinal number. Bits 30-15 or 62-15 must be 0.
 		if (analysis_->IsX64())

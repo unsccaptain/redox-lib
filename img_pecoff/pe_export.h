@@ -16,19 +16,19 @@ namespace pecoff {
 			forwarder_(forwarder), name_(nullptr) {
 		}
 
-		DWORD Rva() { return rva_; }
+		DWORD Rva() const { return rva_; }
 
 		// Code case
-		void* Address() { return address_; }
+		void* Address() const { return address_; }
 
 		// Forwarder name case
-		const char* Forwarder() { return force_cast<const char*>(address_); }
+		const char* Forwarder() const { return force_cast<const char*>(address_); }
 
-		USHORT Ordinal() { return ordinal_; }
+		USHORT Ordinal() const { return ordinal_; }
 
-		const char* Name() { return name_; }
+		const char* Name() const { return name_; }
 
-		bool IsForwarder() { return forwarder_; }
+		bool IsForwarder() const { return forwarder_; }
 
 		friend class PECoffExport;
 

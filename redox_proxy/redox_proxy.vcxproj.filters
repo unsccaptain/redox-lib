@@ -36,6 +36,12 @@
     <ClInclude Include="..\include\check.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="attribute_mgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="formatter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module_entry.cpp">
@@ -51,6 +57,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="module_file.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="attribute_mgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="formatter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

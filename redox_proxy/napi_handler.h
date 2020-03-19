@@ -135,6 +135,12 @@ namespace redox {
 				return prop_value_;
 			}
 
+			NapiPropertyAccessor operator[](const string& prop_name) {
+				return MakePropertyAccessor(env_, prop_value_, prop_name);
+			}
+
+			static NapiPropertyAccessor MakePropertyAccessor(napi_env env, napi_value holder, const string& prop_name);
+
 		private:
 			napi_env env_;
 			napi_value holder_;
@@ -151,7 +157,9 @@ namespace redox {
 			CheckNAPI(napi_create_object(env, &value_));
 		}
 
-		NapiPropertyAccessor operator[](const string& prop_name);
+		NapiPropertyAccessor operator[](const string& prop_name) {
+			return NapiPropertyAccessor::MakePropertyAccessor(env_, value_, prop_name);
+		}
 	};
 
 	class ExtractCallbackInfo {

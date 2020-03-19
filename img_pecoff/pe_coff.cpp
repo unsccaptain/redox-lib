@@ -12,8 +12,31 @@ namespace pecoff {
 	}
 
 	PECoffAnalysis* PECoffAnalysis::CreateAnalysis(const string& file) {
-		PECoffAnalysisX86* analysis = new PECoffAnalysisX86(file);
-		return analysis;
+		HANDLE file_handle = CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
+		if (file_handle == INVALID_HANDLE_VALUE)
+			return nullptr;
+		DWORD read_size;
+		WORD pe_magic;
+		IMAGE_DOS_HEADER dos_header;
+		try {
+			if (!ReadFile(file_handle, &dos_header, sizeof(IMAGE_DOS_HEADER), &read_size, nullptr))
+				throw(exception("read file failed!"));
+			if (SetFilePointer(file_handle, dos_header.e_lfanew + 4 + sizeof(IMAGE_FILE_HEADER), nullptr, FILE_BEGIN) <= 0)
+				throw(exception("read file failed!"));
+			if (!ReadFile(file_handle, &pe_magic, 2, &read_size, nullptr))
+				throw(exception("read_file_failed"));
+		}
+		catch (...) {
+			CloseHandle(file_handle);
+			return nullptr;
+		}
+		CloseHandle(file_handle);
+		if (pe_magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+			return new PECoffAnalysisX86(file);
+		else if (pe_magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+			return new PECoffAnalysisAmd64(file);
+		else
+			return nullptr;
 	}
 
 	void PECoffAnalysis::GenerateAnalysis() {
@@ -69,9 +92,18 @@ namespace pecoff {
 		return (DWORD)-1;
 	}
 
-	DWORD PECoffAnalysisX86::GetThunkCount(void* thunk_array) {
+	DWORD PECoffAnalysisX86::GetThunkCount(PVOID thunk_array) {
 		DWORD count = 0;
 		PIMAGE_THUNK_DATA32 thunk = force_cast<PIMAGE_THUNK_DATA32>(thunk_array);
+		while (thunk[count].u1.Ordinal != 0) {
+			count++;
+		}
+		return count;
+	}
+
+	DWORD PECoffAnalysisAmd64::GetThunkCount(PVOID thunk_array) {
+		DWORD count = 0;
+		PIMAGE_THUNK_DATA64 thunk = force_cast<PIMAGE_THUNK_DATA64>(thunk_array);
 		while (thunk[count].u1.Ordinal != 0) {
 			count++;
 		}

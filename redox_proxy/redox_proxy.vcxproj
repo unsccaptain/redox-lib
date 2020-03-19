@@ -103,7 +103,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>..\out\electron.lib;..\out\img_pecoff.lib;..\out\redox_utils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\out\redox.lib;..\out\debug\img_pecoff.lib;..\out\debug\redox_utils.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -170,12 +170,16 @@
   <ItemGroup>
     <ClInclude Include="..\include\cast.h" />
     <ClInclude Include="..\include\check.h" />
+    <ClInclude Include="attribute_mgr.h" />
+    <ClInclude Include="formatter.h" />
     <ClInclude Include="module_pecoff.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="napi_extend.h" />
     <ClInclude Include="napi_handler.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="attribute_mgr.cpp" />
+    <ClCompile Include="formatter.cpp" />
     <ClCompile Include="module_file.cpp" />
     <ClCompile Include="module_pecoff.cpp" />
     <ClCompile Include="module_entry.cpp" />

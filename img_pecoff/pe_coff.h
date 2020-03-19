@@ -55,7 +55,7 @@ namespace pecoff {
 		virtual DWORD GetNumberOfDirectories() = 0;
 		virtual DWORD GetFileAlignment() = 0;
 		virtual DWORD GetSectionAlignment() = 0;
-		virtual DWORD GetImageBase() = 0;
+		virtual ULONGLONG GetImageBase() = 0;
 		virtual DWORD GetSizeOfImage() = 0;
 		virtual DWORD GetAddressOfEntryPoint() = 0;
 
@@ -74,6 +74,11 @@ namespace pecoff {
 		HANDLE GetFileHanlde() { return osdep_.GetFileHandle(); }
 
 		bool IsX64() { return x64_; }
+
+		template<class T>
+		T* As() {
+			dynamic_cast<T*>(this);
+		}
 
 		static PECoffAnalysis* CreateAnalysis(const string& file);
 
@@ -104,31 +109,31 @@ namespace pecoff {
 		virtual DWORD GetThunkCount(void* thunk_array) = 0;
 
 	private:
-		PULONG pe_magic_;
-		PIMAGE_DOS_HEADER dos_header_;
-		PIMAGE_FILE_HEADER file_header_;
-		PIMAGE_SECTION_HEADER section_header_;
-		PIMAGE_IMPORT_DESCRIPTOR import_desc_;
-		PIMAGE_EXPORT_DIRECTORY export_dir_;
-		PVOID optional_header_;
-		DWORD size_of_headers_;
+		PULONG pe_magic_ = nullptr;
+		PIMAGE_DOS_HEADER dos_header_ = nullptr;
+		PIMAGE_FILE_HEADER file_header_ = nullptr;
+		PIMAGE_SECTION_HEADER section_header_ = nullptr;
+		PIMAGE_IMPORT_DESCRIPTOR import_desc_ = nullptr;
+		PIMAGE_EXPORT_DIRECTORY export_dir_ = nullptr;
+		PVOID optional_header_ = nullptr;
+		DWORD size_of_headers_ = 0;
 	};
 
 	class PECoffAnalysisX86 :public PECoffAnalysis {
 	public:
 		PECoffAnalysisX86(const string& file)
-			:PECoffAnalysis(file, false) {
+			:PECoffAnalysis(file, false), optional_header_(nullptr) {
 		}
-		
+
 		virtual PIMAGE_DATA_DIRECTORY GetDataDirectory(unsigned idx) {
-			return optional_header_->DataDirectory + idx; 
+			return optional_header_->DataDirectory + idx;
 		}
-		
-		virtual DWORD GetNumberOfDirectories() {return optional_header_->NumberOfRvaAndSizes;}
+
+		virtual DWORD GetNumberOfDirectories() { return optional_header_->NumberOfRvaAndSizes; }
 		virtual DWORD GetAddressOfEntryPoint() { return optional_header_->AddressOfEntryPoint; }
 		virtual DWORD GetFileAlignment() { return optional_header_->FileAlignment; }
 		virtual DWORD GetSectionAlignment() { return optional_header_->SectionAlignment; }
-		virtual DWORD GetImageBase() { return optional_header_->ImageBase; }
+		virtual ULONGLONG GetImageBase() { return optional_header_->ImageBase; }
 		virtual DWORD GetSizeOfImage() { return optional_header_->SizeOfImage; }
 
 		virtual void HandleOptionalHeader() {
@@ -137,6 +142,10 @@ namespace pecoff {
 
 		virtual DWORD GetThunkCount(PVOID thunk_array);
 
+		PIMAGE_OPTIONAL_HEADER32 GetNative() {
+			return optional_header_;
+		}
+
 	private:
 		PIMAGE_OPTIONAL_HEADER32 optional_header_;
 	};
@@ -144,8 +153,32 @@ namespace pecoff {
 	class PECoffAnalysisAmd64 :public PECoffAnalysis {
 	public:
 		PECoffAnalysisAmd64(const string& file)
-			:PECoffAnalysis(file, true) {
+			:PECoffAnalysis(file, true), optional_header_(nullptr) {
 		}
+
+		virtual PIMAGE_DATA_DIRECTORY GetDataDirectory(unsigned idx) {
+			return optional_header_->DataDirectory + idx;
+		}
+
+		virtual DWORD GetNumberOfDirectories() { return optional_header_->NumberOfRvaAndSizes; }
+		virtual DWORD GetAddressOfEntryPoint() { return optional_header_->AddressOfEntryPoint; }
+		virtual DWORD GetFileAlignment() { return optional_header_->FileAlignment; }
+		virtual DWORD GetSectionAlignment() { return optional_header_->SectionAlignment; }
+		virtual ULONGLONG GetImageBase() { return optional_header_->ImageBase; }
+		virtual DWORD GetSizeOfImage() { return optional_header_->SizeOfImage; }
+
+		virtual void HandleOptionalHeader() {
+			optional_header_ = (PIMAGE_OPTIONAL_HEADER64)GetOptionalHeader();
+		}
+
+		virtual DWORD GetThunkCount(PVOID thunk_array);
+
+		PIMAGE_OPTIONAL_HEADER64 GetNative() {
+			return optional_header_;
+		}
+
+	private:
+		PIMAGE_OPTIONAL_HEADER64 optional_header_;
 	};
 
 }

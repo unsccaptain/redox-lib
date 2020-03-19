@@ -14,14 +14,14 @@ namespace pecoff {
 		};
 
 		// Ordinal或者AddressOfData
-		PECoffImportThunk(PECoffAnalysis* analysis, void* thunk);
+		explicit PECoffImportThunk(PECoffAnalysis* analysis, void* thunk);
 
 		// Function或者ForwarderString
-		PECoffImportThunk(PECoffAnalysis* analysis, void* thunk, ThunkKind kind);
+		explicit PECoffImportThunk(PECoffAnalysis* analysis, void* thunk, ThunkKind kind);
 
-		ThunkKind GetKind() { return kind_; }
+		ThunkKind GetKind() const { return kind_; }
 
-		uint64_t GetOrdinal();
+		uint64_t GetOrdinal() const;
 
 		PIMAGE_IMPORT_BY_NAME GetNameDescriptor();
 
@@ -41,11 +41,11 @@ namespace pecoff {
 	public:
 		PECoffImportEntry(PECoffAnalysis* analysis, PIMAGE_IMPORT_DESCRIPTOR import);
 
-		using thunk_iter = vector<PECoffImportThunk>::iterator;
+		using thunk_iter = vector<PECoffImportThunk>::const_iterator;
 
-		thunk_iter begin() { return thunks_.begin(); }
+		thunk_iter begin() const { return thunks_.begin(); }
 
-		thunk_iter end() { return thunks_.end(); }
+		thunk_iter end() const { return thunks_.end(); }
 
 		const char* GetImportName();
 
@@ -80,6 +80,10 @@ namespace pecoff {
 		entry_iter begin() { return import_entries_.begin(); }
 
 		entry_iter end() { return import_entries_.end(); }
+
+		PECoffImportEntry& operator[](uint32_t index) {
+			return import_entries_[index];
+		}
 
 	private:
 		vector<PECoffImportEntry> import_entries_;
