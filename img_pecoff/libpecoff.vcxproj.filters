@@ -29,13 +29,25 @@
     <ClInclude Include="pe_export.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="pe_delay_import.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_reloc.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_common.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_resource.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pe_debug.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Box.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="OsDependance\os_dep_win.cpp">
-      <Filter>os_dep</Filter>
     </ClCompile>
     <ClCompile Include="pe_coff.cpp">
       <Filter>源文件</Filter>
@@ -45,6 +57,18 @@
     </ClCompile>
     <ClCompile Include="pe_export.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pe_delay_import.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pe_reloc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pe_resource.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="os_dep\os_dep_win.cpp">
+      <Filter>os_dep</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

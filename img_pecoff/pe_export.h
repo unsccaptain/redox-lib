@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <cast.h>
 #include <vector>
+#include <pe_common.h>
 
 namespace pecoff {
 	using namespace std;
@@ -11,12 +12,12 @@ namespace pecoff {
 
 	class PECoffExportEntry {
 	public:
-		PECoffExportEntry(DWORD rva, PVOID address, USHORT ordinal, bool forwarder)
+		PECoffExportEntry(pecoff_rva_t rva, PVOID address, pecoff_ordinal_t ordinal, bool forwarder)
 			:rva_(rva), address_(address), ordinal_(ordinal),
 			forwarder_(forwarder), name_(nullptr) {
 		}
 
-		DWORD Rva() const { return rva_; }
+		pecoff_rva_t Rva() const { return rva_; }
 
 		// Code case
 		void* Address() const { return address_; }
@@ -24,8 +25,8 @@ namespace pecoff {
 		// Forwarder name case
 		const char* Forwarder() const { return force_cast<const char*>(address_); }
 
-		USHORT Ordinal() const { return ordinal_; }
-
+		pecoff_ordinal_t Ordinal() const { return ordinal_; }
+		
 		const char* Name() const { return name_; }
 
 		bool IsForwarder() const { return forwarder_; }
@@ -34,9 +35,9 @@ namespace pecoff {
 
 	private:
 		PVOID address_;
-		DWORD rva_;
+		pecoff_rva_t rva_;
 		const char* name_;
-		USHORT ordinal_;
+		pecoff_ordinal_t ordinal_;
 		bool forwarder_;
 	};
 
@@ -53,7 +54,7 @@ namespace pecoff {
 
 		size_t size() { return export_entries_.size(); }
 
-		PCSTR GetExportName();
+		pecoff_str_t GetExportName();
 
 		PIMAGE_EXPORT_DIRECTORY GetNative() {
 			return export_dir_;

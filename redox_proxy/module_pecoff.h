@@ -16,6 +16,8 @@ namespace pecoff {
 #define NOH64(f)
 #define NID(f)
 #define NED(f)
+#define	NDID(f)
+#define NDD(f)
 
 #define DEF_CONST(domain, name, value)
 }

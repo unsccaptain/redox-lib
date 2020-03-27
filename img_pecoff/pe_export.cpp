@@ -4,8 +4,8 @@
 
 namespace pecoff {
 
-	PCSTR PECoffExport::GetExportName() {
-		return force_cast<PCSTR>(analysis_->TranslateRvaToVa(export_dir_->Name));
+	pecoff_str_t PECoffExport::GetExportName() {
+		return force_cast<pecoff_str_t>(analysis_->TranslateRvaToVa(export_dir_->Name));
 	}
 
 	PECoffExport::PECoffExport(PECoffAnalysis* analysis, PIMAGE_EXPORT_DIRECTORY export_dir)
@@ -26,8 +26,8 @@ namespace pecoff {
 		}
 		// 第二遍扫描，将函数名字赋给地址
 		for (unsigned i = 0;i < export_dir_->NumberOfNames;i++) {
-			uint16_t ordinal = ordinal_table[i];
-			const char* name = force_cast<const char*>(analysis_->TranslateRvaToVa(name_table[i]));
+			pecoff_ordinal_t ordinal = ordinal_table[i];
+			pecoff_str_t name = force_cast<const char*>(analysis_->TranslateRvaToVa(name_table[i]));
 			// TODO：需要考虑下是否需要上报这种异常情况
 			if (ordinal < export_dir_->Base) continue;
 			export_entries_[ordinal - export_dir_->Base].name_ = name;

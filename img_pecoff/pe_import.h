@@ -1,5 +1,6 @@
 #pragma once
 #include <Windows.h>
+#include <pe_common.h>
 
 namespace pecoff {
 
@@ -21,12 +22,19 @@ namespace pecoff {
 
 		ThunkKind GetKind() const { return kind_; }
 
-		uint64_t GetOrdinal() const;
+		pecoff_ordinal_t GetOrdinal() const;
 
 		PIMAGE_IMPORT_BY_NAME GetNameDescriptor();
 
+		pecoff_rva_t GetNameRvaIfExist();
+
+		pecoff_rva_t GetAddressRva() { return address_rva_; }
+
 	private:
 		bool IsOrdinal();
+
+		friend class PECoffImportEntry;
+		friend class PECoffDelayImportEntry;
 
 	private:
 		union {
@@ -34,6 +42,7 @@ namespace pecoff {
 			PIMAGE_THUNK_DATA64 thunk64_;
 		};
 		ThunkKind kind_;
+		pecoff_rva_t address_rva_;
 		PECoffAnalysis* analysis_;
 	};
 

@@ -1,11 +1,18 @@
 #pragma once
 
-#include <os_dep.h>
 #include <vector>
 #include <map>
 #include <assert.h>
 #include <string>
 #include <cast.h>
+#include <pe_common.h>
+#include <pe_import.h>
+#include <pe_export.h>
+#include <pe_delay_import.h>
+#include <pe_reloc.h>
+#include <pe_resource.h>
+#include <os_dep.h>
+#include <pe_debug.h>
 
 namespace pecoff {
 	using namespace std;
@@ -15,6 +22,10 @@ namespace pecoff {
 	class PECoffImport;
 	class PECoffImportEntry;
 	class PECoffImportThunk;
+	class PECoffDelayImport;
+	class PECoffReloc;
+	class PECoffResource;
+	class PECoffDebug;
 
 	class PESectionTable {
 	public:
@@ -65,15 +76,44 @@ namespace pecoff {
 
 		PECoffExport GetExportDirectory();
 
-		DWORD WhichDirectory(uint32_t rva);
+		PECoffDelayImport GetDelayImportDirectory();
+
+		PECoffReloc GetRelocDirectory();
+
+		PECoffResource GetResourceDirectory();
+
+		PECoffDebug GetDebugDirectory();
+
+		DWORD WhichDirectory(pecoff_rva_t rva);
+
+		/**
+		 * @brief 根据RVA获取对应的节
+		 * @return rva在某个节中，返回PIMAGE_SECTION_HEADER
+		 * @return 如果rva不会被map，返回nullptr
+		 */
+		PIMAGE_SECTION_HEADER WhichSection(pecoff_rva_t rva);
 
 		void RunAnalysis() { GenerateAnalysis(); }
 
-		PVOID GetMapBase() { return osdep_.GetMapBase(); }
+		PVOID GetMapBase();
 
-		HANDLE GetFileHanlde() { return osdep_.GetFileHandle(); }
+		DWORD GetMapSize();
+
+		//uint32_t ReadBufferFileOffset(uint32_t offset, uint32_t size, PVOID buffer) {
+		//	uint32_t real_size = size;
+		//	if (offset + size > osdep_.GetMappedSize()) {
+		//		real_size = osdep_.GetMappedSize() - offset;
+		//	}
+		//	memcpy(buffer,)
+		//}
+
+		HANDLE GetFileHanlde();
 
 		bool IsX64() { return x64_; }
+
+		PVOID TranslateRvaToVa(pecoff_rva_t rva);
+
+		pecoff_off_t TranslateRvaToOffset(pecoff_rva_t rva);
 
 		template<class T>
 		T* As() {
@@ -98,13 +138,12 @@ namespace pecoff {
 		friend class PECoffExport;
 		friend class PECoffImportEntry;
 		friend class PECoffImportThunk;
+		friend class PECoffDelayImportEntry;
+		friend class PECoffReloc4KThunk;
+		friend class PECoffReloc;
 
 	private:
 		void GenerateAnalysis();
-
-		PVOID TranslateRvaToVa(uint32_t rva);
-
-		DWORD TranslateRvaToOffset(uint32_t rva);
 
 		virtual DWORD GetThunkCount(void* thunk_array) = 0;
 

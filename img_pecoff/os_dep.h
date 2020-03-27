@@ -24,6 +24,8 @@ namespace pecoff {
 
 		HANDLE GetFileHandle() { return image_file_; }
 
+		uint32_t GetMappedSize() { return (uint32_t)map_size_; }
+
 	private:
 		void CloseAllHandle();
 

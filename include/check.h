@@ -9,7 +9,7 @@ if(!(result)) throw(exception(message));
 if((status)!=napi_ok) assert(false);
 
 #define CheckPTR(ptr)									\
-if((ptr)==nullptr) assert(false);
+if((ptr)==0) assert(false);
 
 #define CheckERR(code)									\
 if((code)!=0) assert(false);
